@@ -1,0 +1,202 @@
+{
+  "name": "AI podcaster",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "{{$json.body.text}}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional podcast script writer.\nWrite a conversational and engaging podcast script on the topic: {{ $json.body.text }}. \n\nKeep it around 2 minutes when spoken.\nUse a friendly and informative tone, as if talking directly to listeners.\nAvoid any headings, labels, or formatting. Output plain text only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -400,
+        16
+      ],
+      "id": "56c7db35-0121-46e5-bebe-83d4f8691aa1",
+      "name": "podcast script generator"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        192
+      ],
+      "id": "0bf1dbe6-9bb6-4ec0-826f-881e3b9578de",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6CT8ypxLQ62upWXP",
+          "name": "Google Gemini(PaLM) Api account 8371"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.murf.ai/v1/speech/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "ap2_aeac0bff-9b04-45bb-a86e-5e34de08edb1"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "voiceId",
+              "value": "Terrell"
+            },
+            {
+              "name": "locale",
+              "value": "en-US"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -48,
+        16
+      ],
+      "id": "b2740c4f-a863-44d9-9248-18c3cf4625a9",
+      "name": "murf Ai"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.audioFile }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        16
+      ],
+      "id": "c36742bc-c493-49aa-bbdc-c91e37380112",
+      "name": "Downloder"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "42da31f3-79b1-432b-8ed3-e95d84d9a0dd",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -624,
+        32
+      ],
+      "id": "bfc29006-a877-42d6-949e-7210ccfbb744",
+      "name": "Webhook",
+      "webhookId": "42da31f3-79b1-432b-8ed3-e95d84d9a0dd"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        384,
+        16
+      ],
+      "id": "e94b3616-072b-43ef-8c18-f0d34452e443",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "podcast script generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "podcast script generator": {
+      "main": [
+        [
+          {
+            "node": "murf Ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "murf Ai": {
+      "main": [
+        [
+          {
+            "node": "Downloder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Downloder": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "podcast script generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b178e28f-957b-4586-a4b5-ec577ca366f8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "969257b09ad2942bbaff2e2288304f4969030574d109cdeca05bf11f630884df"
+  },
+  "id": "x6kocSPG6rBvzUFE",
+  "tags": []
+}
